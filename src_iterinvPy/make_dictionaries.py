@@ -2,11 +2,12 @@ import numpy as np
 from functools import reduce
 
 class make_dicts:
-    def __init__(self, user_data_dict, user_model_dict,
-                 user_reg_dict, user_path_dict, user_misc_dict):
+    def __init__(self, user_data_dict, user_model_dict, user_reg_dict,
+                 user_loop_dict, user_path_dict, user_misc_dict):
         self.user_data_dict = user_data_dict
         self.user_model_dict = user_model_dict
         self.user_reg_dict = user_reg_dict
+        self.user_loop_dict = user_loop_dict
         self.user_path_dict = user_path_dict
         self.user_misc_dict = user_misc_dict
         
@@ -14,6 +15,7 @@ class make_dicts:
         self.data_dict = self.make_data_dict()
         self.model_dict = self.make_model_dict()
         self.reg_dict = self.make_reg_dict()
+        self.loop_dict = self.make_loop_dict()
         self.path_dict = self.make_path_dict()
         self.misc_dict = self.make_misc_dict()
         
@@ -45,7 +47,11 @@ class make_dicts:
         data_dict = {}
         for key in all_data_keys:
             if(key in user_data_keys):
-                data_dict[f'{key}'] = user_data_dict[f'{key}']
+                # only for C_d it checks if it is 1D-sigma^2 vector
+                if(key == 'C_d' and user_data_dict['C_d'].ndim == 1): 
+                    data_dict[f'{key}'] = np.diag(user_data_dict[f'{key}'])
+                else:
+                    data_dict[f'{key}'] = user_data_dict[f'{key}']
             else:
                 data_dict[f'{key}'] = optional_data_dict[f'{key}']
                 
@@ -59,7 +65,7 @@ class make_dicts:
         user_model_keys = user_model_dict.keys()
         
         # keys that must be present in the data dictionary provided by user
-        mandatory_model_keys = np.array(['G'])
+        mandatory_model_keys = np.array(['G', 'c_init'])
         
         # checking if the mandatory keys are present                                      
         for key in mandatory_model_keys:
@@ -118,6 +124,41 @@ class make_dicts:
                 reg_dict[f'{key}'] = optional_reg_dict[f'{key}']
 
         return reg_dict
+
+    def make_loop_dict(self):
+        user_loop_dict = self.user_loop_dict
+
+        # keys provided by the user                                                           
+        user_loop_keys = user_loop_dict.keys()
+
+        # keys that must be present in the data dictionary provided by user                   
+        mandatory_loop_keys = np.array([])
+
+        # checking if the mandatory keys are present                                          
+        for key in mandatory_loop_keys:
+            if(key in user_loop_keys):
+                pass
+            else:
+                raise ValueError(f"Missing mandatory loop key: {key}")
+
+        # default data keys for optional parameters                                           
+        optional_loop_dict = {}
+        optional_loop_dict['loss_threshold'] = 1e-12
+        optional_loop_dict['maxiter'] = 20
+
+        # all data keys: user_specified + optional                                            
+        all_loop_dicts = np.array([user_loop_dict, optional_loop_dict])
+        all_loop_keys = reduce(lambda x, y: x.union(y.keys()), all_loop_dicts, set())
+
+        # making the entire data dictionary including mandatory and extra keys                
+        loop_dict = {}
+        for key in all_loop_keys:
+            if(key in user_loop_keys):
+                loop_dict[f'{key}'] = user_loop_dict[f'{key}']
+            else:
+                loop_dict[f'{key}'] = optional_loop_dict[f'{key}']
+
+        return loop_dict
 
     
     def make_path_dict(self):

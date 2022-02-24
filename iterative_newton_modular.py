@@ -3,6 +3,8 @@ from collections import namedtuple
 import matplotlib.pyplot as plt
 import jax
 import jax.numpy as jnp
+
+import init_dict
 import newton_stepper
 import build_newton_components as newton_comps
 
@@ -64,30 +66,17 @@ def iterative_newton(LOOP_ARGS, c_arr_init, data, G, C_d, D, hess_inv):
     plt.plot(x, c_arr @ bsp_basis, '--g', label='y_final')
 
 if __name__ == "__main__":
+    # the initial loss                                                                        
+    loss = loss_fn_(c_arr_init, data, G, C_d, D, mu)
+
+    # computing the hessian once (accurate for linear problem)                                
+    hess_inv = jnp.linalg.inv(hess_fn_(c_arr_init, data, G, C_d, D, mu))
+    
+    #-----------------------Plotting----------------------------------#
     # loading the basis functions
     bsp_basis = np.load(f'{datadir}/bsp_basis.npy')
     # loading the grid
     x = np.load(f'{datadir}/x.npy')
-    # getting the various arguments for gradient and hessian                                  
-    c_arr_true = np.load(f'{datadir}/true_coeff_arr.npy')
-    c_arr_init = np.zeros_like(c_arr_true)
-    G = np.load(f'{datadir}/bsp_basis.npy')
-    # data = np.load(f'{datadir}/y_synth.npy')                                                
-    data = np.load(f'{datadir}/y_noisy.npy')
-    C_d = np.load(f'{datadir}/C_d.npy')
-    D = np.load(f'{datadir}/D.npy')
-    mu = 1e-3
-
-    # the initial loss                                                                        
-    loss = loss_fn_(c_arr_init, data, G, C_d, D, mu)
-
-    # arguments for the loop of newton stepper                                                
-    loop_args = namedtuple('LOOP_ARGS',
-                           ['loss_threshold','maxiter', 'loss', 'mu'])
-    LOOP_ARGS = loop_args(1e-12, 20, loss, mu)
-
-    # computing the hessian once (accurate for linear problem)                                
-    hess_inv = jnp.linalg.inv(hess_fn_(c_arr_init, data, G, C_d, D, mu))
 
     # setting the plotting
     plt.figure()
