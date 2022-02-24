@@ -1,5 +1,5 @@
 import numpy as np
-from src import make_dictionaries as make_dicts
+from src_iterinvPy import make_dictionaries as make_dicts
 
 # the data dictionary frontend
 
