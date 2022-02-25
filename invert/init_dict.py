@@ -1,7 +1,6 @@
 import numpy as np
-from src_iterinvPy import make_dictionaries as make_dicts
 
-datadir = './input_data_files'
+datadir = '../input_data_files'
 
 # the data dictionary frontend
 
@@ -31,11 +30,3 @@ user_path_dict['outdir'] = '.'
 
 # the miscellaneous field dictionary frontend
 user_misc_dict = {}
-
-# retrieving the final dictionary
-inv_dicts = make_dicts.make_dicts(user_data_dict,
-                                  user_model_dict,
-                                  user_reg_dict,
-                                  user_loop_dict,
-                                  user_path_dict,
-                                  user_misc_dict)

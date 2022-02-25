@@ -14,9 +14,9 @@ plotdir = './plots'
 # miscellaneous functions from newton components                                             
 loss_fn_, model_misfit_fn_, grad_fn_, hess_fn_ = newton_comps.get_newton_components()
 
-def iterative_newton(LOOP_ARGS, c_arr_init, data, G, C_d, D, hess_inv):
+def iterative_newton():
     # running the 2^0 iteration (the first step to get 0th order inversion)
-    c_arr_0 = newton_stepper.run_newton(LOOP_ARGS, c_arr_init, data, G, C_d, D, hess_inv)
+    c_arr_0 = newton_stepper.run_newton(init_dict.inv_dicts)
     
     # plotting the first fit
     plt.plot(x, c_arr_0 @ bsp_basis, 'r', alpha=0.5, label='y_iter')
@@ -66,9 +66,6 @@ def iterative_newton(LOOP_ARGS, c_arr_init, data, G, C_d, D, hess_inv):
     plt.plot(x, c_arr @ bsp_basis, '--g', label='y_final')
 
 if __name__ == "__main__":
-    # the initial loss                                                                        
-    loss = loss_fn_(c_arr_init, data, G, C_d, D, mu)
-
     # computing the hessian once (accurate for linear problem)                                
     hess_inv = jnp.linalg.inv(hess_fn_(c_arr_init, data, G, C_d, D, mu))
     
@@ -83,9 +80,9 @@ if __name__ == "__main__":
     plt.plot(x, data, 'xb', label='y_noisy')
     plt.plot(x, c_arr_true @ bsp_basis, 'k', label='y_true')
     plt.plot(x, c_arr_init @ bsp_basis, 'gray', label='y_init')
-
-    iterative_newton(LOOP_ARGS, c_arr_init, data, G, C_d, D, hess_inv)
     
+    iterative_newton()
+
     plt.xlabel('x')
     plt.ylabel('y')
     
