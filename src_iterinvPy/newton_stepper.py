@@ -1,14 +1,14 @@
 import time 
-import numpy as np
+import jax.numpy as jnp
 from jax import tree_multimap
 import sys
 
 
 class inv_Newton:
-    def __init__(self, func_dict, inv_dicts):
+    def __init__(self, func_dict, inv_dicts, isIterative=False):
         #--------unwraps the inversion dictionary (static parts only)-----#
         self.loss_fn = func_dict['loss_fn']
-        self.model_misfit_fn = func_dict['model_misfit_fn']
+        self.reg_fn = func_dict['reg_fn']
         self.grad_fn = func_dict['grad_fn']
         self.hess_fn = func_dict['hess_fn']
         
@@ -35,8 +35,10 @@ class inv_Newton:
         # if the hessian inverse has not be precomputed yet
         hess = self.hess_fn(self.c_init, self.data_total,
                             self.G, self.C_d, self.D, self.mu)
-        self.hessinv = np.linalg.inv(hess)
+        self.hessinv = jnp.linalg.inv(hess)
                                     
+        # flag needed for deciding whether to print each step
+        self.isIterative = isIterative
         
 
     def print_info(self, itercount, tdiff, data_misfit,
@@ -58,7 +60,7 @@ class inv_Newton:
     def run_newton(self, data, c_arr):
         itercount = 0
         loss_diff = 1e25
-        loss = 7e3 # LOOP_ARGS.loss
+        loss = self.loss_fn(self.c_init, data, self.G, self.C_d, self.D, self.mu)
         
         while ((abs(loss_diff) > self.loss_threshold) and
                (itercount < self.maxiter)):
@@ -73,7 +75,7 @@ class inv_Newton:
             c_arr = self.update(c_arr, grads, self.hessinv)
             loss = self.loss_fn(c_arr, data, self.G, self.C_d, self.D, self.mu)
             
-            model_misfit = self.model_misfit_fn(c_arr, self.D, self.mu)
+            model_misfit = self.reg_fn(c_arr, self.D, self.mu)
             data_misfit = loss -  model_misfit
             
             loss_diff = loss_prev - loss
@@ -84,6 +86,11 @@ class inv_Newton:
             # end time for an iteration
             t2 = time.time()
             
+            if(not self.isIterative):
+                self.print_info(itercount, t2-t1, data_misfit,
+                                loss_diff, abs(grads).max(), model_misfit)
+                
+        if(self.isIterative):
             self.print_info(itercount, t2-t1, data_misfit,
                             loss_diff, abs(grads).max(), model_misfit)
             

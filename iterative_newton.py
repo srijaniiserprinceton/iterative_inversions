@@ -76,7 +76,7 @@ if __name__ == "__main__":
     data = np.load(f'{datadir}/y_noisy.npy')
     C_d = np.load(f'{datadir}/C_d.npy')
     D = np.load(f'{datadir}/D.npy')
-    mu = 1e-3
+    mu = 1
 
     # the initial loss                                                                        
     loss = loss_fn_(c_arr_init, data, G, C_d, D, mu)

@@ -145,6 +145,7 @@ class make_dicts:
         optional_loop_dict = {}
         optional_loop_dict['loss_threshold'] = 1e-12
         optional_loop_dict['maxiter'] = 20
+        optional_loop_dict['k_iter_max'] = 3
 
         # all data keys: user_specified + optional                                            
         all_loop_dicts = np.array([user_loop_dict, optional_loop_dict])
@@ -180,6 +181,7 @@ class make_dicts:
         # default data keys for optional parameters                                           
         optional_path_dict = {}
         optional_path_dict['outdir'] = '.'
+        optional_path_dict['plotdir'] = '.'
 
         # all data keys: user_specified + optional                                            
         all_path_dicts = np.array([user_path_dict, optional_path_dict])
