@@ -64,11 +64,11 @@ if __name__ == "__main__":
     c_arr_true = np.load(f'{datadir}/true_coeff_arr.npy')
     c_arr_init = np.zeros_like(c_arr_true)
     G = np.load(f'{datadir}/bsp_basis.npy')
-    # data = np.load(f'{datadir}/y_synth.npy')
-    data = np.load(f'{datadir}/y_noisy.npy')
+    data = np.load(f'{datadir}/y_synth.npy')
+    # data = np.load(f'{datadir}/y_noisy.npy')
     C_d = np.load(f'{datadir}/C_d.npy')
     D = np.load(f'{datadir}/D.npy')
-    mu = 1e-3
+    mu = 0.0
     
     # the initial loss
     loss = loss_fn_(c_arr_init, data, G, C_d, D, mu)

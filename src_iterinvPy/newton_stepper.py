@@ -1,26 +1,25 @@
-import numpy as np
 import time 
-import jax.numpy as jnp
+import numpy as np
 from jax import tree_multimap
-from collections import namedtuple
-import build_newton_components as newton_comps
 import sys
 
-sys.path.append("./plotter")
-import postplotter
-
-
-# miscellaneous functions from newton components
-loss_fn_, model_misfit_fn_, grad_fn_, hess_fn_ = newton_comps.get_newton_components()
 
 class inv_Newton:
-    def __init__(self, inv_dicts):
+    def __init__(self, func_dict, inv_dicts):
+        #--------unwraps the inversion dictionary (static parts only)-----#
+        self.loss_fn = func_dict['loss_fn']
+        self.model_misfit_fn = func_dict['model_misfit_fn']
+        self.grad_fn = func_dict['grad_fn']
+        self.hess_fn = func_dict['hess_fn']
+        
         #--------unwraps the inversion dictionary (static parts only)-----#
         # the data components
+        self.data_total = inv_dicts.data_dict['data']
         self.C_d = inv_dicts.data_dict['C_d']
         
         # the model components
         self.G = inv_dicts.model_dict['G']
+        self.c_init = inv_dicts.model_dict['c_init']
     
         # the regularization components
         self.mu = inv_dicts.reg_dict['mu']
@@ -34,7 +33,10 @@ class inv_Newton:
         self.hessinv = inv_dicts.misc_dict['hessinv']
 
         # if the hessian inverse has not be precomputed yet
-        self.hessinv = self.compute_hessinv()
+        hess = self.hess_fn(self.c_init, self.data_total,
+                            self.G, self.C_d, self.D, self.mu)
+        self.hessinv = np.linalg.inv(hess)
+                                    
         
 
     def print_info(self, itercount, tdiff, data_misfit,
@@ -56,7 +58,7 @@ class inv_Newton:
     def run_newton(self, data, c_arr):
         itercount = 0
         loss_diff = 1e25
-        loss = LOOP_ARGS.loss
+        loss = 7e3 # LOOP_ARGS.loss
         
         while ((abs(loss_diff) > self.loss_threshold) and
                (itercount < self.maxiter)):
@@ -67,11 +69,11 @@ class inv_Newton:
             #--------------Body of a newton step---------------#
             loss_prev = loss
             
-            grads = grad_fn_(c_arr, data, self.G, self.C_d, self.D, self.mu)
-            c_arr = update(c_arr, grads, self.hess_inv)
-            loss = loss_fn_(c_arr, data, self.G, self.C_d, self.D, self.mu)
+            grads = self.grad_fn(c_arr, data, self.G, self.C_d, self.D, self.mu)
+            c_arr = self.update(c_arr, grads, self.hessinv)
+            loss = self.loss_fn(c_arr, data, self.G, self.C_d, self.D, self.mu)
             
-            model_misfit = model_misfit_fn_(c_arr, self.D, self.mu)
+            model_misfit = self.model_misfit_fn(c_arr, self.D, self.mu)
             data_misfit = loss -  model_misfit
             
             loss_diff = loss_prev - loss
@@ -82,7 +84,7 @@ class inv_Newton:
             # end time for an iteration
             t2 = time.time()
             
-            print_info(itercount, t2-t1, data_misfit,
-                       loss_diff, abs(grads).max(), model_misfit)
+            self.print_info(itercount, t2-t1, data_misfit,
+                            loss_diff, abs(grads).max(), model_misfit)
             
         return c_arr

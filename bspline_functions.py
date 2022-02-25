@@ -62,6 +62,7 @@ def find_bspline_coeffs(y):
     
     plt.plot(x, y, 'k', label='y_clean')
     plt.plot(x, y_recon, '--r', label='y_recon')
+    
     plt.xlabel('x')
     plt.ylabel('y')
     plt.legend()

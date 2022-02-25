@@ -1,2 +1,5 @@
-import init_dict
-import build_newton_components
+import build_inversion_setup as inv_setup
+from src_iterinvPy import newton_stepper
+
+# initializing the class for carrying out a single Newton inversion
+invertor = newton_stepper.inv_Newton(inv_setup.func_dict, inv_setup.inv_dicts)

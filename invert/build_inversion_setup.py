@@ -1,14 +1,14 @@
 import jax
 
 import init_dict
-import build_newton_components as newton_comps
+import init_newton_functions as newton_funcs
 from src_iterinvPy import make_dictionaries as make_dicts
 
 #-----------------the user-defined functions-----------------#
-model_fn = newton_comps.model_fn
-data_misfit_fn = newton_comps.data_misfit_fn
-model_misfit_fn = newton_comps.regularization_fn
-loss_fn = newton_comps.loss_fn
+model_fn = newton_funcs.model_fn
+data_misfit_fn = newton_funcs.data_misfit_fn
+model_misfit_fn = newton_funcs.regularization_fn
+loss_fn = newton_funcs.loss_fn
 
 #---------------------gradient and hessian-------------------#                                
 grad = jax.grad(loss_fn)
@@ -24,8 +24,8 @@ hess_ = jax.jit(hess)
 func_dict = {}
 func_dict['loss_fn'] = loss_fn_
 func_dict['model_misfit_fn'] = model_misfit_fn_
-func_dict['grad'] = grad_
-func_dict['hess'] = hess_
+func_dict['grad_fn'] = grad_
+func_dict['hess_fn'] = hess_
 
 #-------------retrieving the parameter dictionary-------------#
 inv_dicts = make_dicts.make_dicts(init_dict.user_data_dict,
